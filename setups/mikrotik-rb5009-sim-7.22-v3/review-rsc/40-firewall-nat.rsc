@@ -32,15 +32,11 @@ add list=RFC1918 address=192.168.0.0/16
 add chain=input action=accept connection-state=established,related comment="Input established/related"
 add chain=input action=drop connection-state=invalid comment="Input invalid"
 add chain=input action=accept protocol=icmp limit=10,20:packet comment="Input ICMP"
-add chain=input action=add-src-to-address-list in-interface=vlan10-admin protocol=tcp dst-port=22,8291 connection-state=new src-address-list=!mgmt-bruteforce-stage1 address-list=mgmt-bruteforce-stage1 address-list-timeout=1m comment="Mgmt brute-force stage1"
-add chain=input action=add-src-to-address-list in-interface=vlan10-admin protocol=tcp dst-port=22,8291 connection-state=new src-address-list=mgmt-bruteforce-stage1 src-address-list=!mgmt-bruteforce-stage2 address-list=mgmt-bruteforce-stage2 address-list-timeout=5m comment="Mgmt brute-force stage2"
-add chain=input action=add-src-to-address-list in-interface=vlan10-admin protocol=tcp dst-port=22,8291 connection-state=new src-address-list=mgmt-bruteforce-stage2 src-address-list=!mgmt-bruteforce-stage3 address-list=mgmt-bruteforce-stage3 address-list-timeout=1h comment="Mgmt brute-force stage3"
-add chain=input action=add-src-to-address-list in-interface=vlan10-admin protocol=tcp dst-port=22,8291 connection-state=new src-address-list=mgmt-bruteforce-stage3 address-list=mgmt-bruteforce-blacklist address-list-timeout=1d comment="Mgmt brute-force blacklist"
+# Optional advanced brute-force escalation can be added later if needed.
 add chain=input action=drop in-interface=vlan10-admin protocol=tcp dst-port=22,8291 src-address-list=mgmt-bruteforce-blacklist comment="Drop blacklisted mgmt sources"
 add chain=input action=accept in-interface=vlan10-admin protocol=tcp dst-port=22,8291 comment="Mgmt from admin VLAN"
 add chain=input action=accept in-interface-list=LAN protocol=udp dst-port=53,67,68,123 comment="LAN DNS/DHCP/NTP"
-add chain=input action=add-src-to-address-list in-interface-list=WAN protocol=tcp psd=21,3s,3,1 address-list=wan-port-scanners address-list-timeout=1d comment="Detect WAN port scanners"
-add chain=input action=drop in-interface-list=WAN src-address-list=wan-port-scanners comment="Drop WAN port scanners"
+# Optional WAN scan-detection (psd) is intentionally omitted for compatibility.
 add chain=input action=drop in-interface-list=WAN comment="Drop WAN to router"
 add chain=input action=drop comment="Drop all other input"
 

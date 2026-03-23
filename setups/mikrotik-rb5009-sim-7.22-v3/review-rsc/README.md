@@ -51,3 +51,105 @@ Also complete these ops inputs before production cutover:
 - Set `cfgSyslogRemote` to your real syslog destination.
 - Add private encrypted backup automation via a private/local script named `private-encrypted-backup`.
 - Confirm scheduler times align with maintenance windows.
+
+## Cutover Run Notes (Lessons Learned)
+
+These notes were captured during a live bring-up and should be treated as required operator practice.
+
+### 1) Upload prerequisites before import
+
+- Upload all referenced `.rsc` files to router `Files` before running a master installer.
+- If `master-install-stage1-wan-bringup.rsc` reports missing files, confirm exact filenames first.
+
+### 2) Overlay must import first
+
+- Test overlay syntax explicitly before master import:
+
+```routeros
+/import file-name=00-site-overlay.local.rsc
+```
+
+- Current overlay variable names are:
+  - `cfgSiteName`
+  - `cfgAdminPassword`
+  - `cfgWgPrivateKey`
+  - `cfgWgAdminPublicKey`
+  - `cfgSyslogRemote`
+
+### 3) Stage 1 bring-up sequence
+
+- Recommended command:
+
+```routeros
+/import file-name=master-install-stage1-wan-bringup.rsc
+```
+
+- This brings up management, VLAN baseline, WAN DHCP, firewall/NAT, and stage-1 verification.
+
+### 4) If a stage partially applied, do not blindly rerun all stages
+
+- Errors like `device already added as bridge port` or `already have such address` mean that stage already applied.
+- Continue from the next unapplied stage after validating current state.
+
+### 5) Stage 1 success checks
+
+- Run:
+
+```routeros
+/import file-name=98-stage1-wan-verify.rsc
+```
+
+- Success criteria:
+  - WAN DHCP on `ether1` is `bound`
+  - default route exists
+  - ping `1.1.1.1` succeeds
+  - DNS resolve succeeds
+  - `vlan10-admin` present at `192.168.10.1/24`
+
+### 6) Service hardening to retain
+
+- Keep `reverse-proxy` disabled:
+
+```routeros
+/ip service set [find name=reverse-proxy] disabled=yes
+```
+
+- Restrict management services to admin VLAN:
+
+```routeros
+/ip service set [find where name="ssh" and dynamic=no] address=192.168.10.0/24
+/ip service set [find where name="winbox" and dynamic=no] address=192.168.10.0/24
+```
+
+### 7) L2 discovery/MAC access behavior
+
+- Firewall rules do not replace these controls; they are separate L2 settings.
+- For secure steady state:
+
+```routeros
+/tool mac-server set allowed-interface-list=none
+/tool mac-server mac-winbox set allowed-interface-list=none
+/ip neighbor discovery-settings set discover-interface-list=none
+```
+
+- During setup only (temporary): you may set these to `all`, then revert to `none`.
+
+### 8) Stage 2 timing
+
+- Do not run Stage 2 WireGuard import until real WG keys are set in overlay.
+- If keys are placeholders, run only non-WG stages first (`60`, `70`, `99`) and return to `50` later.
+
+### 9) Useful operator commands
+
+```routeros
+/ip service print where dynamic=no
+/ip address print where interface=vlan10-admin
+/interface bridge port print where interface=ether7
+/interface bridge vlan print where vlan-ids=10
+```
+
+Logout from RouterOS CLI over SSH:
+
+```routeros
+/quit
+```

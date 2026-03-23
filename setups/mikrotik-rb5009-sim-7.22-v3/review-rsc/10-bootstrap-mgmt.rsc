@@ -24,7 +24,7 @@ set api-ssl disabled=yes
 set ssh disabled=no port=22
 set winbox disabled=no port=8291
 
-/ip ssh set strong-crypto=yes allow-none-crypto=no always-allow-password-login=yes
+/ip ssh set strong-crypto=yes
 
 # Disable L2 management discovery/services by default.
 /tool mac-server set allowed-interface-list=none

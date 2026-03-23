@@ -1,7 +1,7 @@
 # RB5009 precheck for clean-start staged deployment
 :local board [/system resource get board-name]
 :put ("Detected board: " . $board)
-:if ($board !~ "RB5009") do={
+:if ([:find $board "RB5009"] = nil) do={
   :error "This script pack targets RB5009 class hardware only"
 }
 

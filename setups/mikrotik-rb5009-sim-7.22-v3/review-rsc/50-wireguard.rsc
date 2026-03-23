@@ -22,10 +22,7 @@ add interface=wg0 public-key="$cfgWgAdminPublicKey" allowed-address=10.10.10.2/3
 # Router management from WireGuard
 /ip firewall filter
 add chain=input action=accept in-interface-list=WAN protocol=udp dst-port=51820 place-before=[find where comment="Drop WAN to router"] comment="WireGuard handshake"
-add chain=input action=add-src-to-address-list in-interface=wg0 protocol=tcp dst-port=22,8291 connection-state=new src-address-list=!wg-mgmt-bruteforce-stage1 address-list=wg-mgmt-bruteforce-stage1 address-list-timeout=1m place-before=[find where comment="Mgmt from WireGuard"] comment="WG mgmt brute-force stage1"
-add chain=input action=add-src-to-address-list in-interface=wg0 protocol=tcp dst-port=22,8291 connection-state=new src-address-list=wg-mgmt-bruteforce-stage1 src-address-list=!wg-mgmt-bruteforce-stage2 address-list=wg-mgmt-bruteforce-stage2 address-list-timeout=5m place-before=[find where comment="Mgmt from WireGuard"] comment="WG mgmt brute-force stage2"
-add chain=input action=add-src-to-address-list in-interface=wg0 protocol=tcp dst-port=22,8291 connection-state=new src-address-list=wg-mgmt-bruteforce-stage2 src-address-list=!wg-mgmt-bruteforce-stage3 address-list=wg-mgmt-bruteforce-stage3 address-list-timeout=1h place-before=[find where comment="Mgmt from WireGuard"] comment="WG mgmt brute-force stage3"
-add chain=input action=add-src-to-address-list in-interface=wg0 protocol=tcp dst-port=22,8291 connection-state=new src-address-list=wg-mgmt-bruteforce-stage3 address-list=wg-mgmt-bruteforce-blacklist address-list-timeout=1d place-before=[find where comment="Mgmt from WireGuard"] comment="WG mgmt brute-force blacklist"
+# Optional advanced WG brute-force escalation can be added later if needed.
 add chain=input action=drop in-interface=wg0 protocol=tcp dst-port=22,8291 src-address-list=wg-mgmt-bruteforce-blacklist place-before=[find where comment="Mgmt from WireGuard"] comment="Drop blacklisted WG mgmt sources"
 add chain=input action=accept in-interface=wg0 protocol=tcp dst-port=22,8291 place-before=[find where comment="Drop all other input"] comment="Mgmt from WireGuard"
 
