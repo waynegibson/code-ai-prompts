@@ -13,7 +13,7 @@ model:
 Prompt document control:
 
 - document id: setup-mikrotik-router
-- document version: 0.5.0
+- document version: 0.5.1
 - status: draft for approval
 - last updated: 2026-03-23
 - owner: network platform engineering
@@ -21,12 +21,13 @@ Prompt document control:
   - patch: wording, examples, formatting, typo fixes
   - minor: added requirements, new safeguards, additional output sections
   - major: scope change, workflow redesign, architecture change
-- release notes: added explicit handling for non-managed downstream devices and clarified WAN/input guidance
+- release notes: added port-speed verification and managed vs unmanaged device allocation guidance to discovery interview
 
 Revision history:
 
 | version | date       | change summary                                                                                                                     |
 | ------: | ---------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+|   0.5.1 | 2026-03-23 | Added port-speed verification to discovery and guidance on managed vs unmanaged device port allocation strategy                    |
 |   0.5.0 | 2026-03-23 | Added explicit discovery for non-managed downstream devices, clarified access-port intent, and fixed prompt formatting regressions |
 |   0.4.1 | 2026-03-23 | Added Quick Start section with platform-specific instructions for VS Code, Claude, and ChatGPT browser usage                       |
 |   0.4.0 | 2026-03-23 | Added targeted discovery prompts for WAN handoff, trunk details, VLAN gateway/DHCP, guest controls, and failure/acceptance testing |
@@ -145,6 +146,7 @@ If overlay-default, describe current baseline state (IP, users, services, routin
 - Router model (for example RB5009UG+S+):
 - RouterOS target version/channel (stable, long-term, exact version):
 - Single router or HA pair (two routers for redundancy):
+- Available port speeds (example: ether1-7 are 1 Gbps, ether8 is 2.5 Gbps, SFP1 is 10 Gbps):
 - Hardware constraints (SFP type, PoE needs, ports in use, storage):
 
 3) Topology and WAN
@@ -188,12 +190,14 @@ If overlay-default, describe current baseline state (IP, users, services, routin
 
 9) Downstream device port mapping
 - Any non-managed downstream devices connected directly to the router? (yes/no):
-- Device name/type (for example Tenda VoIP router):
-- Which router port will it use (for example ether6):
-- Port mode required (access/untagged only, not trunk):
-- VLAN for that port:
-- Should the device be isolated from other internal VLANs? (yes/no):
-- Is downstream NAT allowed on that device? (yes/no):
+- **If yes only:**
+  - Device name/type (for example Tenda VoIP router):
+  - Which router port will it use (for example ether6):
+  - Port mode required (access/untagged only, not trunk):
+  - VLAN for that port:
+  - Should the device be isolated from other internal VLANs? (yes/no):
+  - Is downstream NAT allowed on that device? (yes/no):
+- **If no, skip to next section.**
 
 10) Observability and operations
 - Log destination (local, syslog, SIEM):
@@ -232,6 +236,7 @@ Short guidance for technical fields:
 - IPoE: Most common ISP handoff, where the router receives a dynamic IP via DHCP (sometimes called 'DHCP client', 'dynamic WAN', or 'IPoE').
 - WAN IP assignment method: How your ISP gives your router its public IP address (DHCP/dynamic [IPoE], static, PPPoE, etc.).
 - Non-managed downstream device: a consumer router, ATA, or VoIP device that cannot carry multiple tagged VLANs and should usually use a single access/untagged port.
+- Managed vs unmanaged port allocation: Managed devices (switches, APs) get faster ports and trunk support; unmanaged devices (Tenda hubs, VoIP routers) get access ports. Prioritize managed devices to faster ports unless unmanaged devices require higher bandwidth.
 
 Recommended defaults policy (for missing inputs):
 
@@ -274,8 +279,10 @@ Use the copy/paste requirements form as your checklist, then do only targeted ga
 - management access restrictions
 - WAN/failover design and ISP handoff details (tagging/DHCP options/MAC clone)
 - VLAN, gateway, DHCP scope, and addressing plan
-- AP trunk mapping and SSID-to-VLAN mapping
-- non-managed downstream device port mapping, access-port VLAN, isolation, and NAT intent
+- available port speeds on router (verify model specs against user's claim)
+- AP trunk mapping and SSID-to-VLAN mapping (assign to fastest available port)
+- **non-managed downstream devices: ask "Any non-managed downstream devices?" first. If "no", skip all sub-questions. If "yes", then ask: port mapping, access-port VLAN, isolation, and NAT intent (confirm based on device model specs)**
+- port allocation strategy: verify managed devices get faster/trunk-capable ports; unmanaged devices get access ports (if any)
 - NAT/VPN exposure and guest controls
 - logging/backup destination
 - deployment path and baseline state (overlay-default vs clean-start)
@@ -288,7 +295,8 @@ Use the copy/paste requirements form as your checklist, then do only targeted ga
 
 5. If gaps remain, proceed with hardened defaults and explicitly list assumptions and risks.
 6. If deployment path is not provided, default to clean-start and clearly label that assumption.
-7. Before final scripts, present a short "Defaults to be applied" list and request approval when defaults are material.
+7. **Port-speed verification step** (critical): After gathering port speeds and device models, output a port-allocation summary confirming: (a) router model and available port speeds, (b) managed devices assigned to fastest/trunk ports (e.g., ASUS AP → ether8 2.5 Gbps), (c) unmanaged devices assigned to access ports (e.g., Tenda hub → ether6 1 Gbps). Ask user to confirm. If any mismatch with user's topology, ask for clarification before generating config.
+8. Before final scripts, present a short "Defaults to be applied" list and request approval when defaults are material.
 
 Output contract (after discovery):
 Return the final result in this exact structure.
