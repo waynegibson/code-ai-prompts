@@ -13,7 +13,7 @@ model:
 Prompt document control:
 
 - document id: setup-mikrotik-router
-- document version: 0.4.1
+- document version: 0.5.0
 - status: draft for approval
 - last updated: 2026-03-23
 - owner: network platform engineering
@@ -21,12 +21,13 @@ Prompt document control:
   - patch: wording, examples, formatting, typo fixes
   - minor: added requirements, new safeguards, additional output sections
   - major: scope change, workflow redesign, architecture change
-- release notes: added Quick Start section with platform-specific guidance for VS Code, Claude, and ChatGPT
+- release notes: added explicit handling for non-managed downstream devices and clarified WAN/input guidance
 
 Revision history:
 
 | version | date       | change summary                                                                                                                     |
 | ------: | ---------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+|   0.5.0 | 2026-03-23 | Added explicit discovery for non-managed downstream devices, clarified access-port intent, and fixed prompt formatting regressions |
 |   0.4.1 | 2026-03-23 | Added Quick Start section with platform-specific instructions for VS Code, Claude, and ChatGPT browser usage                       |
 |   0.4.0 | 2026-03-23 | Added targeted discovery prompts for WAN handoff, trunk details, VLAN gateway/DHCP, guest controls, and failure/acceptance testing |
 |   0.3.6 | 2026-03-23 | Added beginner-friendly defaults policy with approval step and explicit defaults tracking in outputs                               |
@@ -149,7 +150,8 @@ If overlay-default, describe current baseline state (IP, users, services, routin
 3) Topology and WAN
 - Backbone (wired, wireless, hybrid):
 - WAN pattern (single ISP, dual ISP failover, load balancing):
-- ISP handoff details (ONT untagged or tagged VLAN, DHCP options, MAC clone required?):
+- ISP handoff details (ONT untagged or tagged VLAN, DHCP/static IP/PPPoE, MAC clone required?):
+- WAN IP assignment method (DHCP/dynamic [IPoE], static, PPPoE, other):
 - Multi-site or single-site:
 - Estimated devices now / in 12-24 months:
 
@@ -184,19 +186,28 @@ If overlay-default, describe current baseline state (IP, users, services, routin
 - Trunk native VLAN (untagged VLAN on trunk, if any):
 - SSID to VLAN mapping (for example HomeWiFi->20, GuestWiFi->30):
 
-9) Observability and operations
+9) Downstream device port mapping
+- Any non-managed downstream devices connected directly to the router? (yes/no):
+- Device name/type (for example Tenda VoIP router):
+- Which router port will it use (for example ether6):
+- Port mode required (access/untagged only, not trunk):
+- VLAN for that port:
+- Should the device be isolated from other internal VLANs? (yes/no):
+- Is downstream NAT allowed on that device? (yes/no):
+
+10) Observability and operations
 - Log destination (local, syslog, SIEM):
 - Monitoring (SNMP, NetFlow/IPFIX, other):
 - Backup policy (schedule, encryption, backup target):
 - Alert channels (email, chat, NOC tooling):
 - Change control requirements (approvals, phased rollout):
 
-10) Failure behavior and acceptance tests
+11) Failure behavior and acceptance tests
 - Required behavior if AP/trunk fails:
 - Required behavior if WAN fails (single/dual WAN):
 - Acceptance tests to pass (internet, DNS, VLAN isolation, guest isolation, VPN):
 
-11) Output preferences
+12) Output preferences
 - Output style (single script, modular blocks, heavily commented):
 - Include lab version first? (yes/no):
 - Include migration plan from existing config? (yes/no):
@@ -215,8 +226,12 @@ Short guidance for technical fields:
 - Overlay-default: keep factory/basic RouterOS baseline and layer custom config on top.
 - Clean-start: reset with no-defaults and apply fully managed config from scratch.
 - Trunk port: one link carrying multiple VLANs between router and AP/switch.
+- Access port: a single untagged port assigned to one VLAN, typically used for non-managed downstream devices.
 - Native VLAN: untagged VLAN on a trunk (use carefully to avoid VLAN leaks).
 - DHCP scope: the address range handed out to clients inside a subnet.
+- IPoE: Most common ISP handoff, where the router receives a dynamic IP via DHCP (sometimes called 'DHCP client', 'dynamic WAN', or 'IPoE').
+- WAN IP assignment method: How your ISP gives your router its public IP address (DHCP/dynamic [IPoE], static, PPPoE, etc.).
+- Non-managed downstream device: a consumer router, ATA, or VoIP device that cannot carry multiple tagged VLANs and should usually use a single access/untagged port.
 
 Recommended defaults policy (for missing inputs):
 
@@ -260,6 +275,7 @@ Use the copy/paste requirements form as your checklist, then do only targeted ga
 - WAN/failover design and ISP handoff details (tagging/DHCP options/MAC clone)
 - VLAN, gateway, DHCP scope, and addressing plan
 - AP trunk mapping and SSID-to-VLAN mapping
+- non-managed downstream device port mapping, access-port VLAN, isolation, and NAT intent
 - NAT/VPN exposure and guest controls
 - logging/backup destination
 - deployment path and baseline state (overlay-default vs clean-start)
