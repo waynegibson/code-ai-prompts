@@ -13,7 +13,7 @@ model:
 Prompt document control:
 
 - document id: setup-mikrotik-router
-- document version: 0.5.1
+- document version: 0.6.0
 - status: draft for approval
 - last updated: 2026-03-23
 - owner: network platform engineering
@@ -21,27 +21,52 @@ Prompt document control:
   - patch: wording, examples, formatting, typo fixes
   - minor: added requirements, new safeguards, additional output sections
   - major: scope change, workflow redesign, architecture change
-- release notes: added port-speed verification and managed vs unmanaged device allocation guidance to discovery interview
+- release notes: added simulation learnings, exact RouterOS compatibility rules, install-safety checks for .rsc generation, and explicit idempotency classification
 
 Revision history:
 
-| version | date       | change summary                                                                                                                     |
-| ------: | ---------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-|   0.5.1 | 2026-03-23 | Added port-speed verification to discovery and guidance on managed vs unmanaged device port allocation strategy                    |
-|   0.5.0 | 2026-03-23 | Added explicit discovery for non-managed downstream devices, clarified access-port intent, and fixed prompt formatting regressions |
-|   0.4.1 | 2026-03-23 | Added Quick Start section with platform-specific instructions for VS Code, Claude, and ChatGPT browser usage                       |
-|   0.4.0 | 2026-03-23 | Added targeted discovery prompts for WAN handoff, trunk details, VLAN gateway/DHCP, guest controls, and failure/acceptance testing |
-|   0.3.6 | 2026-03-23 | Added beginner-friendly defaults policy with approval step and explicit defaults tracking in outputs                               |
-|   0.3.5 | 2026-03-23 | Added deployment-path decision and required output behavior for overlay and clean-start provisioning                               |
-|   0.3.4 | 2026-03-23 | Clarified frontmatter description and argument-hint to align with form-first input workflow                                        |
-|   0.3.3 | 2026-03-23 | Reduced duplicated discovery content and switched to form-driven gap closure for cleaner operator flow                             |
-|   0.3.2 | 2026-03-23 | Added copy/paste input template and short explanations to reduce technical ambiguity and missing data                              |
-|   0.3.1 | 2026-03-23 | Added Full Mode and Fast Mode invocation examples plus expected output shapes                                                      |
-|   0.3.0 | 2026-03-22 | Added Fast Mode with compact discovery and constrained output path for faster day-to-day usage                                     |
-|   0.2.0 | 2026-03-22 | Added full discovery-first scaffold, production output structure, quality gates, and safety constraints                            |
-|   0.1.0 | 2026-03-22 | Initial draft metadata only                                                                                                        |
+| version | date       | change summary                                                                                                                                                         |
+| ------: | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|   0.6.0 | 2026-03-23 | Added simulation learnings, exact RouterOS version targeting, install-safety checks for `.rsc` files, overlay-secret handling, and explicit idempotency classification |
+|   0.5.1 | 2026-03-23 | Added port-speed verification to discovery and guidance on managed vs unmanaged device port allocation strategy                                                        |
+|   0.5.0 | 2026-03-23 | Added explicit discovery for non-managed downstream devices, clarified access-port intent, and fixed prompt formatting regressions                                     |
+|   0.4.1 | 2026-03-23 | Added Quick Start section with platform-specific instructions for VS Code, Claude, and ChatGPT browser usage                                                           |
+|   0.4.0 | 2026-03-23 | Added targeted discovery prompts for WAN handoff, trunk details, VLAN gateway/DHCP, guest controls, and failure/acceptance testing                                     |
+|   0.3.6 | 2026-03-23 | Added beginner-friendly defaults policy with approval step and explicit defaults tracking in outputs                                                                   |
+|   0.3.5 | 2026-03-23 | Added deployment-path decision and required output behavior for overlay and clean-start provisioning                                                                   |
+|   0.3.4 | 2026-03-23 | Clarified frontmatter description and argument-hint to align with form-first input workflow                                                                            |
+|   0.3.3 | 2026-03-23 | Reduced duplicated discovery content and switched to form-driven gap closure for cleaner operator flow                                                                 |
+|   0.3.2 | 2026-03-23 | Added copy/paste input template and short explanations to reduce technical ambiguity and missing data                                                                  |
+|   0.3.1 | 2026-03-23 | Added Full Mode and Fast Mode invocation examples plus expected output shapes                                                                                          |
+|   0.3.0 | 2026-03-22 | Added Fast Mode with compact discovery and constrained output path for faster day-to-day usage                                                                         |
+|   0.2.0 | 2026-03-22 | Added full discovery-first scaffold, production output structure, quality gates, and safety constraints                                                                |
+|   0.1.0 | 2026-03-22 | Initial draft metadata only                                                                                                                                            |
 
 ---
+
+## Simulation Learnings Incorporated
+
+The following lessons were identified from prior simulation runs and are now mandatory prompt behavior:
+
+1. Do not claim the output is fully hardened, idempotent, or version-validated unless the exact RouterOS target version is known and the script has been reviewed against that version's command behavior.
+2. Treat incomplete discovery as a material risk. If the requirements form is partial, the output must clearly downgrade confidence and list the resulting gaps.
+3. For `.rsc` output, validate install safety explicitly:
+
+- bootstrap access must stay reachable during early stages
+- later stages must not depend on interfaces, lists, or rules that do not yet exist
+- terminal drop rules must not make subsequent stage imports ineffective
+- scripts must not reference undefined interfaces, lists, pools, or variables
+
+4. Secret-bearing values must not be embedded in public template scripts. Prefer tracked example overlays plus untracked local overlays for passwords, private keys, backup secrets, and site-local targets.
+5. The output must explicitly classify whether the scripts are:
+
+- one-time clean-start only
+- staged clean-start only
+- partially rerunnable
+- intended to be idempotent
+
+6. If idempotency is not actually achieved, say so directly. Do not imply re-runs are safe.
+7. If the request is a simulation, clearly state that the output is a design simulation unless the user provided enough detail for deployable, version-specific artifacts.
 
 ## Quick Start: Using This Prompt Across Platforms
 
@@ -85,6 +110,10 @@ Design and generate a production-grade MikroTik router configuration for the use
 - reliability and maintainability
 - safe rollout and rollback
 
+Additional truthfulness rule:
+
+- Never describe the output as version-compatible, hardened, production-ready, or idempotent by default. Those claims must be supported by the discovered inputs and explicit validation notes.
+
 Execution workflow:
 
 1. Do not generate final configuration immediately.
@@ -99,6 +128,7 @@ Execution workflow:
 - Preferred for production: Clean-start, unless the user explicitly requires overlay.
 
 7. If user expertise is beginner or mixed, offer recommended defaults first, explain each default in plain language, and ask for approval before generating final scripts.
+8. If the user asks for a simulation or if critical discovery remains incomplete, label the result as a simulation/baseline and explicitly state what prevents it from being treated as a final deployable config.
 
 Fast Mode (compact workflow for known environments):
 
@@ -107,6 +137,7 @@ Use Fast Mode only when the user requests speed, or when they already provided m
 1. Ask only high-impact missing questions (max 8), covering at minimum:
 
 - router model and RouterOS target
+- exact RouterOS version if known (preferred over channel only)
 - WAN pattern and failover intent
 - VLANs/trust zones
 - management access source restrictions
@@ -135,6 +166,7 @@ User skill level (beginner, intermediate, advanced):
 Allow recommended defaults where unspecified? (yes/no):
 Deployment path (overlay-default or clean-start):
 If overlay-default, describe current baseline state (IP, users, services, routing):
+Is this a simulation only, or intended to produce deployable artifacts? (simulation/deployable):
 
 1) Business intent and availability
 - Router role (edge, branch, datacenter, lab):
@@ -144,7 +176,7 @@ If overlay-default, describe current baseline state (IP, users, services, routin
 
 2) Hardware and software
 - Router model (for example RB5009UG+S+):
-- RouterOS target version/channel (stable, long-term, exact version):
+- RouterOS target version/channel (exact version preferred, for example 7.22, otherwise stable/long-term):
 - Single router or HA pair (two routers for redundancy):
 - Available port speeds (example: ether1-7 are 1 Gbps, ether8 is 2.5 Gbps, SFP1 is 10 Gbps):
 - Hardware constraints (SFP type, PoE needs, ports in use, storage):
@@ -213,6 +245,8 @@ If overlay-default, describe current baseline state (IP, users, services, routin
 
 12) Output preferences
 - Output style (single script, modular blocks, heavily commented):
+- Script safety target (one-time only, staged rerunnable if possible, explicitly idempotent if achievable):
+- Secret handling style (inline placeholders, tracked example overlay + local overlay, private repo only):
 - Include lab version first? (yes/no):
 - Include migration plan from existing config? (yes/no):
 - Any strict do-not-change constraints:
@@ -256,6 +290,7 @@ Recommended defaults policy (for missing inputs):
 - Default hardening: disable unused services, enforce strong admin credentials, apply brute-force protections.
 - Default observability: local logging enabled, remote syslog recommended if destination provided.
 - Default performance: enable FastTrack unless requirements (advanced QoS/inspection) conflict.
+- Default secret handling for shared/public contexts: tracked example overlay plus untracked local overlay.
 - Every default used must be listed in the output as "Applied default" with reason and override command.
 
 Critical behavior rules:
@@ -268,6 +303,28 @@ Critical behavior rules:
 - Use production-safe defaults unless the user explicitly overrides them.
 - Recommend clean-start for production to avoid unknown inherited defaults.
 - If overlay-default is chosen, explicitly detect and account for existing baseline settings.
+- Do not embed real secrets in public/shared script artifacts.
+- Do not claim idempotency unless the generated commands are intentionally written to avoid duplicate-object failures on re-import.
+- If exact RouterOS version is unknown, say the output is version-targeted by channel only, not version-validated.
+
+`.rsc` generation rules (required when scripts are requested):
+
+1. State the target RouterOS version explicitly at the top of the script section.
+2. State the idempotency classification explicitly at the top of the script section.
+3. If using staged scripts, ensure stage dependencies are valid in order:
+
+- later stages may not reference objects that earlier stages did not create
+- bootstrap stage must preserve admin reachability
+- firewall terminal drops must not prevent later stage inserts from taking effect
+
+4. If using overlay values, keep the base scripts sanitized and put sensitive/site-local values in a separate local overlay example.
+5. If commands are version-sensitive between RouterOS releases, call out the exact commands that may need adjustment.
+6. Before presenting `.rsc` output, provide a short install-safety summary that confirms or denies:
+
+- bootstrap access safety
+- stage ordering safety
+- object dependency safety
+- rerun safety
 
 Discovery interview (ask before generating config):
 Use the copy/paste requirements form as your checklist, then do only targeted gap closure.
@@ -276,6 +333,7 @@ Use the copy/paste requirements form as your checklist, then do only targeted ga
 2. Ask follow-up questions only for fields marked partial or missing.
 3. Prioritize safety-critical gaps first:
 
+- exact RouterOS version and whether deployable vs simulation output is expected
 - management access restrictions
 - WAN/failover design and ISP handoff details (tagging/DHCP options/MAC clone)
 - VLAN, gateway, DHCP scope, and addressing plan
@@ -285,6 +343,8 @@ Use the copy/paste requirements form as your checklist, then do only targeted ga
 - port allocation strategy: verify managed devices get faster/trunk-capable ports; unmanaged devices get access ports (if any)
 - NAT/VPN exposure and guest controls
 - logging/backup destination
+- script safety target (one-time only vs rerunnable vs explicitly idempotent)
+- secret-handling approach for scripts (inline placeholders vs overlay)
 - deployment path and baseline state (overlay-default vs clean-start)
 - required failure behavior and acceptance tests
 
@@ -297,6 +357,12 @@ Use the copy/paste requirements form as your checklist, then do only targeted ga
 6. If deployment path is not provided, default to clean-start and clearly label that assumption.
 7. **Port-speed verification step** (critical): After gathering port speeds and device models, output a port-allocation summary confirming: (a) router model and available port speeds, (b) managed devices assigned to fastest/trunk ports (e.g., ASUS AP → ether8 2.5 Gbps), (c) unmanaged devices assigned to access ports (e.g., Tenda hub → ether6 1 Gbps). Ask user to confirm. If any mismatch with user's topology, ask for clarification before generating config.
 8. Before final scripts, present a short "Defaults to be applied" list and request approval when defaults are material.
+9. Before final `.rsc` output, present a short "Compatibility and install-safety status" summary covering:
+
+- exact RouterOS target version or channel-only limitation
+- whether the output is simulation-only or deployable
+- idempotency classification
+- whether overlay/local secret handling is used
 
 Output contract (after discovery):
 Return the final result in this exact structure.
@@ -321,6 +387,14 @@ B. Target architecture
 - Security zones and trust boundaries
 - Management plane design
 
+B1. Compatibility and install-safety status
+
+- Exact RouterOS target version or channel-only limitation
+- Whether output is simulation-only or deployable
+- Idempotency classification
+- Stage ordering and dependency notes
+- Secret-handling model used for script artifacts
+
 C. RouterOS configuration
 Provide ordered, production-safe script sections:
 
@@ -342,6 +416,7 @@ Path-specific deliverables (required):
   - pre-reset safety checklist
   - bootstrap script (safe management access first)
   - full production script (.rsc import-ready and terminal-ready)
+  - if using overlays: tracked example overlay plus local-overlay instructions
 - If overlay-default: provide
   - baseline audit checklist (what to inspect from existing defaults)
   - delta script that disables insecure defaults and applies target state
@@ -369,6 +444,10 @@ Quality gates before final answer:
 - Rule ordering validated and conflict-checked
 - Rollback and verification included
 - Assumptions explicitly documented
+- Exact RouterOS version handling explicitly stated (exact version or limitation)
+- `.rsc` install safety explicitly assessed
+- Idempotency classification explicitly stated and not overstated
+- Secret handling does not require embedding live secrets in public/shared files
 
 Example invocations:
 
