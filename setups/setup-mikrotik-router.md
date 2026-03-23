@@ -3,13 +3,17 @@ description: "Scaffold a production-grade MikroTik RouterOS configuration using 
 name: "Setup MikroTik Router"
 argument-hint: "Optional but recommended: paste the completed requirements form (mode, topology, WAN, VLANs, routing, security, VPN/NAT, observability, and output preferences) to minimize follow-up questions."
 agent: "agent"
-model: ["GPT-5 (copilot)", "Claude Sonnet 4.5 (copilot)"]
+model:
+  [
+    "GPT-5 (VS Code Copilot, ChatGPT)",
+    "Claude Sonnet 4.5 (VS Code Copilot, Claude.ai)",
+  ]
 ---
 
 Prompt document control:
 
 - document id: setup-mikrotik-router
-- document version: 0.4.0
+- document version: 0.4.1
 - status: draft for approval
 - last updated: 2026-03-23
 - owner: network platform engineering
@@ -17,12 +21,13 @@ Prompt document control:
   - patch: wording, examples, formatting, typo fixes
   - minor: added requirements, new safeguards, additional output sections
   - major: scope change, workflow redesign, architecture change
-- release notes: added targeted topology requirements (WAN handoff, AP trunk mapping, per-VLAN gateway/DHCP, guest controls, and acceptance tests)
+- release notes: added Quick Start section with platform-specific guidance for VS Code, Claude, and ChatGPT
 
 Revision history:
 
 | version | date       | change summary                                                                                                                     |
 | ------: | ---------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+|   0.4.1 | 2026-03-23 | Added Quick Start section with platform-specific instructions for VS Code, Claude, and ChatGPT browser usage                       |
 |   0.4.0 | 2026-03-23 | Added targeted discovery prompts for WAN handoff, trunk details, VLAN gateway/DHCP, guest controls, and failure/acceptance testing |
 |   0.3.6 | 2026-03-23 | Added beginner-friendly defaults policy with approval step and explicit defaults tracking in outputs                               |
 |   0.3.5 | 2026-03-23 | Added deployment-path decision and required output behavior for overlay and clean-start provisioning                               |
@@ -33,6 +38,38 @@ Revision history:
 |   0.3.0 | 2026-03-22 | Added Fast Mode with compact discovery and constrained output path for faster day-to-day usage                                     |
 |   0.2.0 | 2026-03-22 | Added full discovery-first scaffold, production output structure, quality gates, and safety constraints                            |
 |   0.1.0 | 2026-03-22 | Initial draft metadata only                                                                                                        |
+
+---
+
+## Quick Start: Using This Prompt Across Platforms
+
+### VS Code (GitHub Copilot)
+
+1. Copy this entire prompt (from "You are a senior network engineer..." through the end).
+2. Paste into a `.md` file in your project (e.g., `mikrotik-requirements.md`).
+3. In VS Code, open the command palette and use Copilot Chat to reference the file (e.g., `@file:mikrotik-requirements.md`).
+4. Paste the completed requirements form into the chat.
+5. Copilot will ask targeted gap-closure questions, then generate the full output.
+6. Copy the RouterOS script sections into your deployment workflow.
+
+### Claude (Claude.ai or Claude API)
+
+1. Copy this entire prompt.
+2. In Claude.ai, create a new conversation.
+3. Paste the full prompt into the first message.
+4. In a follow-up message, paste the completed requirements form.
+5. Claude will conduct discovery, apply safe defaults if approved, and generate the configuration.
+6. Copy the output sections into your deployment or version control system.
+
+### ChatGPT (Browser)
+
+1. Copy this entire prompt (or key sections from "You are a senior network engineer..." onward).
+2. Open ChatGPT in your browser and start a new conversation.
+3. Paste the prompt and wait for confirmation like "Ready to help design your MikroTik configuration."
+4. Fill out the requirements form locally, then paste the completed form into the chat.
+5. ChatGPT will perform gap-closure discovery and ask clarifying questions.
+6. ChatGPT generates the full output (requirements, architecture, RouterOS script, validation, runbook).
+7. Copy the RouterOS script sections and apply them to your router via terminal or .rsc import.
 
 ---
 
