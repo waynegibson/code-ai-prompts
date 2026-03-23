@@ -3,14 +3,14 @@
 # ether1: WAN DHCP from ONT
 # ether2: access VLAN 20 (main switch)
 # ether8: trunk to ASUS AP (tagged VLANs 20,30,40,50 and 10)
-# ether9: access VLAN 10 (admin)
-# ether10: access VLAN 50 (voice switch)
+# ether7: access VLAN 10 (admin)
+# ether6: access VLAN 50 (voice switch)
 
 # Add bridge ports
 /interface bridge port
 add bridge=bridge1 interface=ether2 pvid=20 ingress-filtering=yes frame-types=admit-only-untagged-and-priority-tagged comment="Main access"
 add bridge=bridge1 interface=ether8 frame-types=admit-only-vlan-tagged ingress-filtering=yes comment="AP trunk"
-add bridge=bridge1 interface=ether10 pvid=50 ingress-filtering=yes frame-types=admit-only-untagged-and-priority-tagged comment="Voice access"
+add bridge=bridge1 interface=ether6 pvid=50 ingress-filtering=yes frame-types=admit-only-untagged-and-priority-tagged comment="Voice access"
 
 # Create VLAN interfaces for routing/services
 /interface vlan
@@ -21,11 +21,11 @@ add name=vlan50-voice interface=bridge1 vlan-id=50
 
 # Bridge VLAN table
 /interface bridge vlan
-set [find where bridge=bridge1 vlan-ids=10] tagged=bridge1,ether8 untagged=ether9
+set [find where bridge=bridge1 vlan-ids=10] tagged=bridge1,ether8 untagged=ether7
 add bridge=bridge1 vlan-ids=20 tagged=bridge1,ether8 untagged=ether2
 add bridge=bridge1 vlan-ids=30 tagged=bridge1,ether8
 add bridge=bridge1 vlan-ids=40 tagged=bridge1,ether8
-add bridge=bridge1 vlan-ids=50 tagged=bridge1,ether8 untagged=ether10
+add bridge=bridge1 vlan-ids=50 tagged=bridge1,ether8 untagged=ether6
 
 # Enable VLAN filtering after table is in place
 /interface bridge set [find name=bridge1] vlan-filtering=yes

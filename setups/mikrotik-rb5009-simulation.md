@@ -1,5 +1,8 @@
 # MikroTik RB5009UG+S+ Production Simulation: Cape Town Home Professional Build
 
+> Superseded note: this early simulation includes invalid RB5009 interface references (`ether9`/`ether10`).
+> Use the staged pack in `setups/mikrotik-rb5009/` and the golden form in `setups/mikrotik-rb5009-golden-requirements-7.22.md` instead.
+
 **Simulation Date:** 23 March 2026  
 **Router:** MikroTik RB5009UG+S+  
 **Deployment Path:** Clean-start  

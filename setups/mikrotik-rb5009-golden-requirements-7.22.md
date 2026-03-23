@@ -74,7 +74,7 @@ Is this a simulation only, or intended to produce deployable artifacts? (simulat
   - Is downstream NAT allowed on that device? (yes/no): no
 - Additional unmanaged device:
   - Device name/type: Tenda PoE switch
-  - Which router port will it use: ether10
+  - Which router port will it use: ether6
   - Port mode required: access/untagged
   - VLAN for that port: VLAN 50
   - Should the device be isolated from other internal VLANs? (yes/no): yes, voice-only access path
@@ -88,7 +88,7 @@ Is this a simulation only, or intended to produce deployable artifacts? (simulat
 - Change control requirements (approvals, phased rollout): staged rollout with manual validation after each stage
 
 11) Failure behavior and acceptance tests
-- Required behavior if AP/trunk fails: wired admin access on ether9 must remain available; wireless clients fail without affecting router management
+- Required behavior if AP/trunk fails: wired admin access on ether7 must remain available; wireless clients fail without affecting router management
 - Required behavior if WAN fails (single/dual WAN): internal VLAN services remain routed locally; internet unavailable; management from VLAN10 remains available
 - Acceptance tests to pass (internet, DNS, VLAN isolation, guest isolation, VPN): WAN DHCP bound, DNS resolution works, guest blocked from RFC1918, admin reachable via VLAN10 and WireGuard, voice handset registers, printer reachable from approved VLAN only
 

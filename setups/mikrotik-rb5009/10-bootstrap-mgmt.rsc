@@ -29,13 +29,13 @@ set winbox disabled=no port=8291
 # Set a strong admin password from local overlay
 /user set [find name="admin"] password="$CFG_ADMIN_PASSWORD"
 
-# Create bridge and initial admin access lane on ether9
+# Create bridge and initial admin access lane on ether7
 /interface bridge add name=bridge1 vlan-filtering=no protocol-mode=rstp comment="Core bridge"
-/interface bridge port add bridge=bridge1 interface=ether9 pvid=10 ingress-filtering=yes frame-types=admit-only-untagged-and-priority-tagged comment="Admin access port"
+/interface bridge port add bridge=bridge1 interface=ether7 pvid=10 ingress-filtering=yes frame-types=admit-only-untagged-and-priority-tagged comment="Admin access port"
 
 # Management VLAN interface on bridge
 /interface vlan add name=vlan10-admin interface=bridge1 vlan-id=10
-/interface bridge vlan add bridge=bridge1 vlan-ids=10 tagged=bridge1 untagged=ether9
+/interface bridge vlan add bridge=bridge1 vlan-ids=10 tagged=bridge1 untagged=ether7
 /interface bridge set [find name=bridge1] vlan-filtering=yes
 /ip address add address=192.168.10.1/24 interface=vlan10-admin comment="Admin gateway"
 

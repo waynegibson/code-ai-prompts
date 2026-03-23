@@ -6,5 +6,5 @@
 }
 
 :put "Precheck passed"
-:put "Confirm: WAN on ether1, AP trunk on ether8, admin port on ether9, voice access on ether10"
+:put "Confirm: WAN on ether1, AP trunk on ether8, admin port on ether7, voice access on ether6"
 :put "Upload all .rsc files before running master install"

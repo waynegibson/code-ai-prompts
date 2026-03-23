@@ -9,9 +9,9 @@ This folder contains a staged MikroTik RouterOS deployment pack for RB5009 clean
 - Topology intent:
   - `ether1` WAN (DHCP/IPoE)
   - `ether8` AP trunk (VLANs 10,20,30,40,50)
-  - `ether9` admin access (VLAN 10 access)
+  - `ether7` admin access (VLAN 10 access)
   - `ether2` main LAN access (VLAN 20)
-  - `ether10` voice access (VLAN 50)
+  - `ether6` voice access (VLAN 50)
 
 ## Files and execution order
 
@@ -115,7 +115,7 @@ Encrypted scheduled backups are intentionally not fully parameterized in the pub
 
 This pack was adjusted to avoid two deployment risks in the original draft:
 
-- Bootstrap management now brings up VLAN 10 correctly on `ether9` before later stages, instead of relying on an access-port path that would not have carried the VLAN interface safely.
+- Bootstrap management now brings up VLAN 10 correctly on `ether7` before later stages, instead of relying on an access-port path that would not have carried the VLAN interface safely.
 - WireGuard rules now live in the WireGuard stage, so firewall stage imports do not fail before `wg0` exists.
 
 There is still one important operational constraint:
