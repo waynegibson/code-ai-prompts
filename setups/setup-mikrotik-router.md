@@ -13,7 +13,7 @@ model:
 Prompt document control:
 
 - document id: setup-mikrotik-router
-- document version: 0.6.0
+- document version: 0.6.2
 - status: draft for approval
 - last updated: 2026-03-23
 - owner: network platform engineering
@@ -21,12 +21,14 @@ Prompt document control:
   - patch: wording, examples, formatting, typo fixes
   - minor: added requirements, new safeguards, additional output sections
   - major: scope change, workflow redesign, architecture change
-- release notes: added simulation learnings, exact RouterOS compatibility rules, install-safety checks for .rsc generation, and explicit idempotency classification
+- release notes: added mandatory post-simulation review checklist so simulation outputs explicitly report remaining gaps, script risks, and actions before `.rsc` artifacts are trusted
 
 Revision history:
 
 | version | date       | change summary                                                                                                                                                         |
 | ------: | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|   0.6.2 | 2026-03-23 | Added mandatory post-simulation review checklist so simulation outputs explicitly report remaining gaps, script risks, and trust limitations                           |
+|   0.6.1 | 2026-03-23 | Tightened exact-version handling, added stronger incomplete-discovery downgrade rules, and added explicit non-breakage checks for staged `.rsc` installs               |
 |   0.6.0 | 2026-03-23 | Added simulation learnings, exact RouterOS version targeting, install-safety checks for `.rsc` files, overlay-secret handling, and explicit idempotency classification |
 |   0.5.1 | 2026-03-23 | Added port-speed verification to discovery and guidance on managed vs unmanaged device port allocation strategy                                                        |
 |   0.5.0 | 2026-03-23 | Added explicit discovery for non-managed downstream devices, clarified access-port intent, and fixed prompt formatting regressions                                     |
@@ -49,13 +51,18 @@ Revision history:
 The following lessons were identified from prior simulation runs and are now mandatory prompt behavior:
 
 1. Do not claim the output is fully hardened, idempotent, or version-validated unless the exact RouterOS target version is known and the script has been reviewed against that version's command behavior.
+   1a. If the user specifies an exact RouterOS version such as `7.22`, keep referring to that exact version consistently throughout discovery, compatibility notes, and script output. Do not silently fall back to channel-only wording.
 2. Treat incomplete discovery as a material risk. If the requirements form is partial, the output must clearly downgrade confidence and list the resulting gaps.
+   2a. If discovery is incomplete, do not present the result as a final deployable configuration. Present it as a simulation, baseline, or draft with explicit blockers.
 3. For `.rsc` output, validate install safety explicitly:
 
 - bootstrap access must stay reachable during early stages
 - later stages must not depend on interfaces, lists, or rules that do not yet exist
 - terminal drop rules must not make subsequent stage imports ineffective
 - scripts must not reference undefined interfaces, lists, pools, or variables
+- bootstrap firewall rules must not permanently block the later production firewall stage from taking effect
+- VPN/firewall rules must not reference interfaces before those interfaces exist
+- bridge/VLAN bootstrap logic must not remove the current management path before the replacement path is active
 
 4. Secret-bearing values must not be embedded in public template scripts. Prefer tracked example overlays plus untracked local overlays for passwords, private keys, backup secrets, and site-local targets.
 5. The output must explicitly classify whether the scripts are:
@@ -67,6 +74,7 @@ The following lessons were identified from prior simulation runs and are now man
 
 6. If idempotency is not actually achieved, say so directly. Do not imply re-runs are safe.
 7. If the request is a simulation, clearly state that the output is a design simulation unless the user provided enough detail for deployable, version-specific artifacts.
+8. Every simulation output must end with a post-simulation review checklist that states what remains unknown, what prevents safe deployment, and what the next corrective actions are.
 
 ## Quick Start: Using This Prompt Across Platforms
 
@@ -113,6 +121,7 @@ Design and generate a production-grade MikroTik router configuration for the use
 Additional truthfulness rule:
 
 - Never describe the output as version-compatible, hardened, production-ready, or idempotent by default. Those claims must be supported by the discovered inputs and explicit validation notes.
+- If exact version-specific validation has not been done, use wording such as `targeted for RouterOS 7.22` or `designed for RouterOS 7.22`, not `validated on RouterOS 7.22`.
 
 Execution workflow:
 
@@ -129,6 +138,8 @@ Execution workflow:
 
 7. If user expertise is beginner or mixed, offer recommended defaults first, explain each default in plain language, and ask for approval before generating final scripts.
 8. If the user asks for a simulation or if critical discovery remains incomplete, label the result as a simulation/baseline and explicitly state what prevents it from being treated as a final deployable config.
+9. If the user asks for deployable artifacts, exact RouterOS version and install-safety target become mandatory discovery items, not optional enhancements.
+10. If the output is a simulation, the model must not stop at architecture and scripts alone; it must also provide a structured review of confidence, remaining blockers, and script trust level.
 
 Fast Mode (compact workflow for known environments):
 
@@ -145,6 +156,7 @@ Use Fast Mode only when the user requests speed, or when they already provided m
 - monitoring/logging destination
 
 2. If any critical safety input remains unknown, apply hardened defaults and label them as assumptions.
+   2a. If exact RouterOS version is still unknown in Fast Mode, state that the result is channel-targeted only and not exact-version validated.
 3. Produce a concise output with these sections only:
 
 - Fast summary of requirements and assumptions
@@ -291,6 +303,7 @@ Recommended defaults policy (for missing inputs):
 - Default observability: local logging enabled, remote syslog recommended if destination provided.
 - Default performance: enable FastTrack unless requirements (advanced QoS/inspection) conflict.
 - Default secret handling for shared/public contexts: tracked example overlay plus untracked local overlay.
+- Default confidence downgrade when discovery is incomplete: simulation/baseline only.
 - Every default used must be listed in the output as "Applied default" with reason and override command.
 
 Critical behavior rules:
@@ -316,6 +329,7 @@ Critical behavior rules:
 - later stages may not reference objects that earlier stages did not create
 - bootstrap stage must preserve admin reachability
 - firewall terminal drops must not prevent later stage inserts from taking effect
+- bootstrap firewall replacement strategy must be explicit if a later full firewall stage replaces an initial safe-access policy
 
 4. If using overlay values, keep the base scripts sanitized and put sensitive/site-local values in a separate local overlay example.
 5. If commands are version-sensitive between RouterOS releases, call out the exact commands that may need adjustment.
@@ -325,6 +339,13 @@ Critical behavior rules:
 - stage ordering safety
 - object dependency safety
 - rerun safety
+
+7. Before presenting staged `.rsc` files, also confirm or deny these non-breakage checks:
+
+- Will the bootstrap stage preserve current admin access?
+- Can every later stage import succeed given the objects created earlier?
+- Can later allow rules still match after earlier drop rules are installed?
+- Are secrets/site-local values kept out of the tracked base scripts?
 
 Discovery interview (ask before generating config):
 Use the copy/paste requirements form as your checklist, then do only targeted gap closure.
@@ -363,6 +384,7 @@ Use the copy/paste requirements form as your checklist, then do only targeted ga
 - whether the output is simulation-only or deployable
 - idempotency classification
 - whether overlay/local secret handling is used
+- whether the output is exact-version targeted, exact-version reviewed, or channel-targeted only
 
 Output contract (after discovery):
 Return the final result in this exact structure.
@@ -390,6 +412,7 @@ B. Target architecture
 B1. Compatibility and install-safety status
 
 - Exact RouterOS target version or channel-only limitation
+- Exact-version status: targeted, reviewed, or not validated
 - Whether output is simulation-only or deployable
 - Idempotency classification
 - Stage ordering and dependency notes
@@ -437,6 +460,20 @@ E. Operations runbook
 - Incident triage quick-start
 - Capacity and policy review cadence
 
+F. Post-simulation review checklist
+
+- State whether the result should currently be treated as:
+  - simulation only
+  - lab-ready draft
+  - deployable with caveats
+  - deployable candidate pending operator validation
+- List remaining unknowns that materially affect design or safety
+- List `.rsc` install risks still not proven safe
+- List version-specific items that still need RouterOS review
+- List device-capability assumptions that require real-world confirmation
+- List which secrets or local values must move to overlay/private handling
+- Give a short action list for the next run or refinement cycle
+
 Quality gates before final answer:
 
 - No critical requirement left ambiguous
@@ -445,9 +482,12 @@ Quality gates before final answer:
 - Rollback and verification included
 - Assumptions explicitly documented
 - Exact RouterOS version handling explicitly stated (exact version or limitation)
+- If exact version was provided, the answer uses that exact version consistently
 - `.rsc` install safety explicitly assessed
+- `.rsc` non-breakage checks explicitly addressed
 - Idempotency classification explicitly stated and not overstated
 - Secret handling does not require embedding live secrets in public/shared files
+- If the result is a simulation, post-simulation review checklist is present and specific
 
 Example invocations:
 
