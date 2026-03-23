@@ -1,5 +1,8 @@
 # Stage 40 - firewall and NAT
 
+# Replace bootstrap firewall with production policy
+/ip firewall filter remove [find]
+
 # Interface lists
 /interface list add name=WAN
 /interface list add name=LAN
@@ -23,8 +26,6 @@ add chain=input action=accept connection-state=established,related comment="Inpu
 add chain=input action=drop connection-state=invalid comment="Input invalid"
 add chain=input action=accept protocol=icmp limit=10,20:packet comment="Input ICMP"
 add chain=input action=accept in-interface=vlan10-admin protocol=tcp dst-port=22,8291 comment="Mgmt from admin VLAN"
-add chain=input action=accept in-interface=wg0 protocol=tcp dst-port=22,8291 comment="Mgmt from WireGuard"
-add chain=input action=accept in-interface-list=WAN protocol=udp dst-port=51820 comment="WireGuard handshake"
 add chain=input action=accept in-interface-list=LAN protocol=udp dst-port=53,67,68,123 comment="LAN DNS/DHCP/NTP"
 add chain=input action=drop in-interface-list=WAN comment="Drop WAN to router"
 add chain=input action=drop comment="Drop all other input"

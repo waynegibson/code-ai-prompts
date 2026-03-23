@@ -3,6 +3,10 @@
 # /import file-name=master-install-clean-start.rsc
 
 :put "Starting staged RB5009 deployment"
+:if ([:len [/file find where name="00-site-overlay.local.rsc"]] = 0) do={
+	:error "Missing 00-site-overlay.local.rsc. Copy 00-site-overlay.example.rsc and fill in local values first."
+}
+/import file-name=00-site-overlay.local.rsc
 /import file-name=00-precheck.rsc
 /import file-name=10-bootstrap-mgmt.rsc
 /import file-name=20-interfaces-vlans.rsc

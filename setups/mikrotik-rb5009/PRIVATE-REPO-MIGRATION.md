@@ -21,6 +21,7 @@ network-configs-private/
     cape-town/
       rb5009/
         staged/
+          00-site-overlay.example.rsc
           00-precheck.rsc
           10-bootstrap-mgmt.rsc
           20-interfaces-vlans.rsc
@@ -48,6 +49,7 @@ network-configs-private/
 
 From this repo path:
 
+- `setups/mikrotik-rb5009/00-site-overlay.example.rsc`
 - `setups/mikrotik-rb5009/*.rsc`
 - `setups/mikrotik-rb5009/README.md`
 - `setups/mikrotik-rb5009/OPS-CHEATSHEET.md`
@@ -97,21 +99,24 @@ sites/*/*/rb5009/exports/*
 
 ## Minimal overlay example
 
-Create `overlays/prod.local.rsc` (untracked):
+Create `staged/00-site-overlay.local.rsc` or `overlays/prod.local.rsc` (untracked, choose one convention and keep it consistent):
 
 ```routeros
 # Untracked production overlay - do not commit
-/user set [find name="admin"] password="REAL_STRONG_PASSWORD"
-/interface wireguard set [find name="wg0"] private-key="REAL_WG_PRIVATE_KEY"
-/interface wireguard peers set [find comment="Admin laptop"] public-key="REAL_CLIENT_PUBLIC_KEY"
-/system logging action set [find name="remote-syslog"] remote=192.168.10.50 remote-port=514
+:global CFG_SITE_NAME "RB5009-Cape-Town"
+:global CFG_ADMIN_PASSWORD "REAL_STRONG_PASSWORD"
+:global CFG_WG_PRIVATE_KEY "REAL_WG_PRIVATE_KEY"
+:global CFG_WG_ADMIN_PUBLIC_KEY "REAL_CLIENT_PUBLIC_KEY"
+:global CFG_SYSLOG_REMOTE "192.168.10.50"
 ```
 
 Apply after base pack import:
 
 ```routeros
-/import file-name=overlays/prod.local.rsc
+/import file-name=00-site-overlay.local.rsc
 ```
+
+For encrypted scheduled backups, keep the actual backup script and password in the private repo only.
 
 ## Versioning guidance
 

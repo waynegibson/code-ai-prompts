@@ -8,9 +8,9 @@
 
 # Add bridge ports
 /interface bridge port
-add bridge=bridge1 interface=ether2 pvid=20 comment="Main access"
+add bridge=bridge1 interface=ether2 pvid=20 ingress-filtering=yes frame-types=admit-only-untagged-and-priority-tagged comment="Main access"
 add bridge=bridge1 interface=ether8 frame-types=admit-only-vlan-tagged ingress-filtering=yes comment="AP trunk"
-add bridge=bridge1 interface=ether10 pvid=50 comment="Voice access"
+add bridge=bridge1 interface=ether10 pvid=50 ingress-filtering=yes frame-types=admit-only-untagged-and-priority-tagged comment="Voice access"
 
 # Create VLAN interfaces for routing/services
 /interface vlan
@@ -21,7 +21,7 @@ add name=vlan50-voice interface=bridge1 vlan-id=50
 
 # Bridge VLAN table
 /interface bridge vlan
-add bridge=bridge1 vlan-ids=10 tagged=bridge1,ether8 untagged=ether9
+set [find where bridge=bridge1 vlan-ids=10] tagged=bridge1,ether8 untagged=ether9
 add bridge=bridge1 vlan-ids=20 tagged=bridge1,ether8 untagged=ether2
 add bridge=bridge1 vlan-ids=30 tagged=bridge1,ether8
 add bridge=bridge1 vlan-ids=40 tagged=bridge1,ether8

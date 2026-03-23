@@ -15,6 +15,7 @@ This folder contains a staged MikroTik RouterOS deployment pack for RB5009 clean
 
 ## Files and execution order
 
+0. `00-site-overlay.example.rsc` -> copy to `00-site-overlay.local.rsc` and fill in locally
 1. `00-precheck.rsc`
 2. `10-bootstrap-mgmt.rsc`
 3. `20-interfaces-vlans.rsc`
@@ -32,13 +33,13 @@ Utilities:
 
 ## Before you run anything
 
-Replace all placeholder values first:
+Use a local overlay instead of editing the staged base files directly:
 
-- `CHANGE_ME_STRONG_PASSWORD` in `10-bootstrap-mgmt.rsc`
-- `CHANGE_ME_WG_PRIVATE_KEY` in `50-wireguard.rsc`
-- `CHANGE_ME_ADMIN_CLIENT_PUBLIC_KEY` in `50-wireguard.rsc`
-- `CHANGE_ME_BACKUP_PASSWORD` in `70-logging-backup-maintenance.rsc`
-- `192.168.10.50` syslog target in `70-logging-backup-maintenance.rsc`
+1. Copy `00-site-overlay.example.rsc` to `00-site-overlay.local.rsc`
+2. Fill in your real local values in the `.local` file only
+3. Keep `.local` untracked
+
+Base files should remain sanitized templates.
 
 Recommended one-time checks:
 
@@ -53,6 +54,7 @@ Recommended one-time checks:
 Run each stage manually and validate after each:
 
 ```routeros
+/import file-name=00-site-overlay.local.rsc
 /import file-name=00-precheck.rsc
 /import file-name=10-bootstrap-mgmt.rsc
 /import file-name=20-interfaces-vlans.rsc
@@ -66,7 +68,7 @@ Run each stage manually and validate after each:
 
 ### Option B: master installer
 
-Use only after placeholder replacement and file upload validation:
+Use only after creating `00-site-overlay.local.rsc` and uploading all files:
 
 ```routeros
 /import file-name=master-install-clean-start.rsc
@@ -76,10 +78,11 @@ Use only after placeholder replacement and file upload validation:
 
 1. Reset to no-defaults.
 2. Reconnect to the router using your preferred safe method.
-3. Upload all `.rsc` files to router `Files`.
-4. Run Option A staged install.
-5. Run acceptance tests.
-6. Save a known-good encrypted backup.
+3. Copy `00-site-overlay.example.rsc` to `00-site-overlay.local.rsc` and fill in local values.
+4. Upload all `.rsc` files to router `Files`.
+5. Run Option A staged install.
+6. Run acceptance tests.
+7. Save a known-good encrypted backup.
 
 ## Suggested acceptance checks
 
@@ -100,8 +103,21 @@ If a stage fails:
 3. If necessary, restore known-good backup.
 4. Last resort: clean reset and rerun staged install.
 
+Encrypted scheduled backups are intentionally not fully parameterized in the public base pack. Keep the real backup password and any scheduled encrypted-backup job in your private repo or local overlay.
+
 ## Production hygiene
 
 - Never commit live secrets in this public repo.
 - Keep production keys/passwords in your private infrastructure repo.
 - Keep this pack as a template and publish only sanitized placeholders.
+
+## Review Notes
+
+This pack was adjusted to avoid two deployment risks in the original draft:
+
+- Bootstrap management now brings up VLAN 10 correctly on `ether9` before later stages, instead of relying on an access-port path that would not have carried the VLAN interface safely.
+- WireGuard rules now live in the WireGuard stage, so firewall stage imports do not fail before `wg0` exists.
+
+There is still one important operational constraint:
+
+- The staged files are template-oriented, not fully idempotent. Re-importing the same stage without cleanup can create duplicate objects. Use them for controlled clean-start installs, not repeated converge runs.

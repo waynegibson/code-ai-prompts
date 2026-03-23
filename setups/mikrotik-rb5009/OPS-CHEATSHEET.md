@@ -7,12 +7,13 @@ Quick command reference for clean-start deployment and recovery.
 Prerequisites:
 
 - All .rsc files uploaded to router Files.
-- Placeholder values replaced in stage scripts.
+- `00-site-overlay.local.rsc` created from `00-site-overlay.example.rsc` and filled in.
 - You have console or known-safe management access.
 
 Run in this exact order:
 
 ```routeros
+/import file-name=00-site-overlay.local.rsc
 /import file-name=00-precheck.rsc
 /import file-name=10-bootstrap-mgmt.rsc
 /import file-name=20-interfaces-vlans.rsc

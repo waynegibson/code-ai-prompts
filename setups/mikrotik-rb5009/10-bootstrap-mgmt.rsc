@@ -1,5 +1,17 @@
 # Stage 10 - bootstrap management baseline
-/system identity set name="RB5009-Cape-Town"
+:global CFG_SITE_NAME
+:global CFG_ADMIN_PASSWORD
+
+:if ([:len "$CFG_ADMIN_PASSWORD"] = 0 || "$CFG_ADMIN_PASSWORD" = "CHANGE_ME_STRONG_PASSWORD") do={
+	:error "Missing CFG_ADMIN_PASSWORD. Import 00-site-overlay.local.rsc first."
+}
+
+:local siteName "$CFG_SITE_NAME"
+:if ([:len $siteName] = 0) do={
+	:set siteName "RB5009-Site"
+}
+
+/system identity set name=$siteName
 /system clock set time-zone-name=Africa/Johannesburg
 
 /ip service
@@ -12,18 +24,19 @@ set api-ssl disabled=yes
 set ssh disabled=no port=22
 set winbox disabled=no port=8291
 
-/ip ssh set strong-crypto=yes allow-none-crypto=no always-allow-password-login=no
+/ip ssh set strong-crypto=yes allow-none-crypto=no always-allow-password-login=yes
 
-# Set a strong admin password immediately
-# Replace before use
-/user set [find name="admin"] password="CHANGE_ME_STRONG_PASSWORD"
+# Set a strong admin password from local overlay
+/user set [find name="admin"] password="$CFG_ADMIN_PASSWORD"
 
-# Create bridge and temporary/admin access lane on ether9
+# Create bridge and initial admin access lane on ether9
 /interface bridge add name=bridge1 vlan-filtering=no protocol-mode=rstp comment="Core bridge"
-/interface bridge port add bridge=bridge1 interface=ether9 pvid=10 comment="Admin access port"
+/interface bridge port add bridge=bridge1 interface=ether9 pvid=10 ingress-filtering=yes frame-types=admit-only-untagged-and-priority-tagged comment="Admin access port"
 
 # Management VLAN interface on bridge
 /interface vlan add name=vlan10-admin interface=bridge1 vlan-id=10
+/interface bridge vlan add bridge=bridge1 vlan-ids=10 tagged=bridge1 untagged=ether9
+/interface bridge set [find name=bridge1] vlan-filtering=yes
 /ip address add address=192.168.10.1/24 interface=vlan10-admin comment="Admin gateway"
 
 # Admin DHCP for initial access

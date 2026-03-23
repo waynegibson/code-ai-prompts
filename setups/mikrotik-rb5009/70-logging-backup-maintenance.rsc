@@ -1,5 +1,5 @@
 # Stage 70 - logging, backups, maintenance
-# Replace placeholders before production
+:global CFG_SYSLOG_REMOTE
 
 # Local logging topics
 /system logging
@@ -9,34 +9,21 @@ add topics=dhcp action=memory
 add topics=critical action=memory
 
 # Remote syslog target
-/system logging action
-add name=remote-syslog type=remote remote=192.168.10.50 remote-port=514 bsd-syslog=yes
-
-/system logging
-add topics=system action=remote-syslog
-add topics=firewall action=remote-syslog
-add topics=critical action=remote-syslog
-
-# SNMP optional (restrict to admin VLAN)
-/snmp set enabled=yes trap-version=3 trap-generators=temp-exception
-/snmp community add name=readonly addresses=192.168.10.0/24 read-access=yes write-access=no
-
-# Daily encrypted backup
-/system script
-add name=daily-encrypted-backup source={
-  :local d [/system clock get date]
-  :local fname ("rb5009-" . $d)
-  /system backup save name=$fname password="CHANGE_ME_BACKUP_PASSWORD" encryption=aes-sha256
+:if ([:len "$CFG_SYSLOG_REMOTE"] > 0 && "$CFG_SYSLOG_REMOTE" != "CHANGE_ME_SYSLOG_REMOTE") do={
+  /system logging action add name=remote-syslog type=remote remote="$CFG_SYSLOG_REMOTE" remote-port=514 bsd-syslog=yes
+  /system logging add topics=system action=remote-syslog
+  /system logging add topics=firewall action=remote-syslog
+  /system logging add topics=critical action=remote-syslog
 }
 
-/system scheduler
-add name=run-daily-backup interval=1d start-time=02:15:00 on-event=daily-encrypted-backup
+# Private-only note:
+# Encrypted scheduled backups should be installed from the private repo or a
+# local overlay so the backup password never appears in the public template.
 
 # Weekly text export
 /system script
 add name=weekly-export source={
-  :local d [/system clock get date]
-  /export file=("rb5009-export-" . $d)
+  /export file="rb5009-weekly-export"
 }
 
 /system scheduler
