@@ -1,0 +1,9 @@
+# files
+mock.md
+
+# local secret overrides and generated router artifacts
+*.backup
+*.npk
+*.auto.rsc
+*.local.rsc
+*.secrets.rsc
