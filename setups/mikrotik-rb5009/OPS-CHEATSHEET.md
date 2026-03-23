@@ -2,6 +2,10 @@
 
 Quick command reference for clean-start deployment and recovery.
 
+See also:
+
+- `WIREGUARD-QUICKSTART.md` for the admin VPN setup sample used by this design
+
 ## 1) First-Time Install (Staged, Recommended)
 
 Prerequisites:

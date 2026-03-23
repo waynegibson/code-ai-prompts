@@ -30,6 +30,7 @@ Utilities:
 
 - `90-rollback-emergency.rsc`: rollback helper guidance
 - `master-install-clean-start.rsc`: imports all stages in order
+- `WIREGUARD-QUICKSTART.md`: beginner-friendly sample for admin VPN setup
 
 ## Before you run anything
 
@@ -110,6 +111,10 @@ Encrypted scheduled backups are intentionally not fully parameterized in the pub
 - Never commit live secrets in this public repo.
 - Keep production keys/passwords in your private infrastructure repo.
 - Keep this pack as a template and publish only sanitized placeholders.
+
+## Related guides
+
+- `WIREGUARD-QUICKSTART.md` for Mac/iPhone admin VPN setup samples
 
 ## Review Notes
 
