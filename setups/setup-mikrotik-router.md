@@ -13,7 +13,7 @@ model:
 Prompt document control:
 
 - document id: setup-mikrotik-router
-- document version: 0.6.2
+- document version: 0.6.3
 - status: draft for approval
 - last updated: 2026-03-23
 - owner: network platform engineering
@@ -21,28 +21,29 @@ Prompt document control:
   - patch: wording, examples, formatting, typo fixes
   - minor: added requirements, new safeguards, additional output sections
   - major: scope change, workflow redesign, architecture change
-- release notes: added mandatory post-simulation review checklist so simulation outputs explicitly report remaining gaps, script risks, and actions before `.rsc` artifacts are trusted
+- release notes: added required endpoint placement matrix, AP capability decision state, explicit 3CX hosting branch, and operational blocker/caveat mode with backup target model options
 
 Revision history:
 
-| version | date       | change summary                                                                                                                                                         |
-| ------: | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-|   0.6.2 | 2026-03-23 | Added mandatory post-simulation review checklist so simulation outputs explicitly report remaining gaps, script risks, and trust limitations                           |
-|   0.6.1 | 2026-03-23 | Tightened exact-version handling, added stronger incomplete-discovery downgrade rules, and added explicit non-breakage checks for staged `.rsc` installs               |
-|   0.6.0 | 2026-03-23 | Added simulation learnings, exact RouterOS version targeting, install-safety checks for `.rsc` files, overlay-secret handling, and explicit idempotency classification |
-|   0.5.1 | 2026-03-23 | Added port-speed verification to discovery and guidance on managed vs unmanaged device port allocation strategy                                                        |
-|   0.5.0 | 2026-03-23 | Added explicit discovery for non-managed downstream devices, clarified access-port intent, and fixed prompt formatting regressions                                     |
-|   0.4.1 | 2026-03-23 | Added Quick Start section with platform-specific instructions for VS Code, Claude, and ChatGPT browser usage                                                           |
-|   0.4.0 | 2026-03-23 | Added targeted discovery prompts for WAN handoff, trunk details, VLAN gateway/DHCP, guest controls, and failure/acceptance testing                                     |
-|   0.3.6 | 2026-03-23 | Added beginner-friendly defaults policy with approval step and explicit defaults tracking in outputs                                                                   |
-|   0.3.5 | 2026-03-23 | Added deployment-path decision and required output behavior for overlay and clean-start provisioning                                                                   |
-|   0.3.4 | 2026-03-23 | Clarified frontmatter description and argument-hint to align with form-first input workflow                                                                            |
-|   0.3.3 | 2026-03-23 | Reduced duplicated discovery content and switched to form-driven gap closure for cleaner operator flow                                                                 |
-|   0.3.2 | 2026-03-23 | Added copy/paste input template and short explanations to reduce technical ambiguity and missing data                                                                  |
-|   0.3.1 | 2026-03-23 | Added Full Mode and Fast Mode invocation examples plus expected output shapes                                                                                          |
-|   0.3.0 | 2026-03-22 | Added Fast Mode with compact discovery and constrained output path for faster day-to-day usage                                                                         |
-|   0.2.0 | 2026-03-22 | Added full discovery-first scaffold, production output structure, quality gates, and safety constraints                                                                |
-|   0.1.0 | 2026-03-22 | Initial draft metadata only                                                                                                                                            |
+| version | date       | change summary                                                                                                                                                          |
+| ------: | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|   0.6.3 | 2026-03-23 | Added endpoint placement matrix requirement, AP capability state requirement, explicit 3CX hosting branch, and operational blocker/caveat mode with backup target model |
+|   0.6.2 | 2026-03-23 | Added mandatory post-simulation review checklist so simulation outputs explicitly report remaining gaps, script risks, and trust limitations                            |
+|   0.6.1 | 2026-03-23 | Tightened exact-version handling, added stronger incomplete-discovery downgrade rules, and added explicit non-breakage checks for staged `.rsc` installs                |
+|   0.6.0 | 2026-03-23 | Added simulation learnings, exact RouterOS version targeting, install-safety checks for `.rsc` files, overlay-secret handling, and explicit idempotency classification  |
+|   0.5.1 | 2026-03-23 | Added port-speed verification to discovery and guidance on managed vs unmanaged device port allocation strategy                                                         |
+|   0.5.0 | 2026-03-23 | Added explicit discovery for non-managed downstream devices, clarified access-port intent, and fixed prompt formatting regressions                                      |
+|   0.4.1 | 2026-03-23 | Added Quick Start section with platform-specific instructions for VS Code, Claude, and ChatGPT browser usage                                                            |
+|   0.4.0 | 2026-03-23 | Added targeted discovery prompts for WAN handoff, trunk details, VLAN gateway/DHCP, guest controls, and failure/acceptance testing                                      |
+|   0.3.6 | 2026-03-23 | Added beginner-friendly defaults policy with approval step and explicit defaults tracking in outputs                                                                    |
+|   0.3.5 | 2026-03-23 | Added deployment-path decision and required output behavior for overlay and clean-start provisioning                                                                    |
+|   0.3.4 | 2026-03-23 | Clarified frontmatter description and argument-hint to align with form-first input workflow                                                                             |
+|   0.3.3 | 2026-03-23 | Reduced duplicated discovery content and switched to form-driven gap closure for cleaner operator flow                                                                  |
+|   0.3.2 | 2026-03-23 | Added copy/paste input template and short explanations to reduce technical ambiguity and missing data                                                                   |
+|   0.3.1 | 2026-03-23 | Added Full Mode and Fast Mode invocation examples plus expected output shapes                                                                                           |
+|   0.3.0 | 2026-03-22 | Added Fast Mode with compact discovery and constrained output path for faster day-to-day usage                                                                          |
+|   0.2.0 | 2026-03-22 | Added full discovery-first scaffold, production output structure, quality gates, and safety constraints                                                                 |
+|   0.1.0 | 2026-03-22 | Initial draft metadata only                                                                                                                                             |
 
 ---
 
@@ -203,6 +204,14 @@ Is this a simulation only, or intended to produce deployable artifacts? (simulat
 
 4) Network segmentation and addressing
 - VLAN list and purpose (for example mgmt, corp, guest, IoT, voice):
+- Endpoint placement matrix (required):
+  - Mac Studio:
+  - Rodecaster Pro:
+  - Apple TV:
+  - Printer:
+  - iPads/iPhones:
+  - 3CX handset:
+  - Cameras:
 - Gateway IP per VLAN (for example VLAN 10 -> 192.168.10.1/24):
 - DHCP scope per VLAN (start/end or subnet):
 - IPv4 subnets per VLAN/site:
@@ -222,6 +231,7 @@ Is this a simulation only, or intended to produce deployable artifacts? (simulat
 
 7) Edge services
 - NAT needs (masquerade, static NAT, inbound port forwards):
+- 3CX hosting model (cloud-hosted, on-prem, unknown):
 - VPN needs (WireGuard, IPsec, OpenVPN, site-to-site, remote users):
 - QoS needs (voice/video priority, critical app shaping):
 - DHCP/DNS/NTP hosted on router or external systems:
@@ -230,6 +240,7 @@ Is this a simulation only, or intended to produce deployable artifacts? (simulat
 8) AP and trunk mapping
 - Which router port is VLAN trunk to AP/switch (for example ether5):
 - Trunk native VLAN (untagged VLAN on trunk, if any):
+- AP VLAN capability state (required: trunk-capable-confirmed, uncertain-fallback-required, not-capable-access-only):
 - SSID to VLAN mapping (for example HomeWiFi->20, GuestWiFi->30):
 
 9) Downstream device port mapping
@@ -247,8 +258,11 @@ Is this a simulation only, or intended to produce deployable artifacts? (simulat
 - Log destination (local, syslog, SIEM):
 - Monitoring (SNMP, NetFlow/IPFIX, other):
 - Backup policy (schedule, encryption, backup target):
+- Backup target model (required: local-only, remote-nas, remote-host, indirect-cloud-sync-via-host):
+- If indirect-cloud-sync-via-host, provider (iCloud Drive, Google Drive, other):
 - Alert channels (email, chat, NOC tooling):
 - Change control requirements (approvals, phased rollout):
+- Operational dependency mode (required: blockers, caveats-only):
 
 11) Failure behavior and acceptance tests
 - Required behavior if AP/trunk fails:
@@ -358,15 +372,20 @@ Use the copy/paste requirements form as your checklist, then do only targeted ga
 - management access restrictions
 - WAN/failover design and ISP handoff details (tagging/DHCP options/MAC clone)
 - VLAN, gateway, DHCP scope, and addressing plan
+- endpoint placement matrix (must be complete for key devices)
 - available port speeds on router (verify model specs against user's claim)
 - AP trunk mapping and SSID-to-VLAN mapping (assign to fastest available port)
+- AP VLAN capability decision state (confirmed, uncertain with fallback, or not-capable access-only)
 - **non-managed downstream devices: ask "Any non-managed downstream devices?" first. If "no", skip all sub-questions. If "yes", then ask: port mapping, access-port VLAN, isolation, and NAT intent (confirm based on device model specs)**
 - port allocation strategy: verify managed devices get faster/trunk-capable ports; unmanaged devices get access ports (if any)
 - NAT/VPN exposure and guest controls
+- 3CX hosting model and corresponding voice branch logic
 - logging/backup destination
+- backup target model and whether cloud backup is direct or indirect via host/NAS
 - script safety target (one-time only vs rerunnable vs explicitly idempotent)
 - secret-handling approach for scripts (inline placeholders vs overlay)
 - deployment path and baseline state (overlay-default vs clean-start)
+- operational dependency mode (blockers vs caveats-only)
 - required failure behavior and acceptance tests
 
 4. Limit follow-up rounds:
@@ -417,6 +436,10 @@ B1. Compatibility and install-safety status
 - Idempotency classification
 - Stage ordering and dependency notes
 - Secret-handling model used for script artifacts
+- Endpoint placement matrix completeness status
+- AP capability state and fallback status
+- 3CX hosting branch selected and its impact summary
+- Operational dependency mode (blockers or caveats-only)
 
 C. RouterOS configuration
 Provide ordered, production-safe script sections:
@@ -468,10 +491,14 @@ F. Post-simulation review checklist
   - deployable with caveats
   - deployable candidate pending operator validation
 - List remaining unknowns that materially affect design or safety
+- Confirm endpoint placement matrix completeness (complete/partial)
+- Confirm AP capability state (confirmed/uncertain/not-capable)
+- Confirm 3CX hosting branch (cloud/on-prem/unknown)
 - List `.rsc` install risks still not proven safe
 - List version-specific items that still need RouterOS review
 - List device-capability assumptions that require real-world confirmation
 - List which secrets or local values must move to overlay/private handling
+- List unresolved operational dependencies and whether they are blockers or caveats
 - Give a short action list for the next run or refinement cycle
 
 Quality gates before final answer:
@@ -488,6 +515,10 @@ Quality gates before final answer:
 - Idempotency classification explicitly stated and not overstated
 - Secret handling does not require embedding live secrets in public/shared files
 - If the result is a simulation, post-simulation review checklist is present and specific
+- Endpoint placement matrix is either complete or explicitly flagged as incomplete
+- AP capability state is explicitly selected
+- 3CX hosting branch is explicitly selected
+- Operational dependency mode is explicitly selected
 
 Example invocations:
 

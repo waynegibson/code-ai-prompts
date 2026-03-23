@@ -33,12 +33,22 @@ Is this a simulation only, or intended to produce deployable artifacts? (simulat
 - Estimated devices now / in 12-24 months: 15 / 25
 
 4) Network segmentation and addressing
-- VLAN list and purpose (for example mgmt, corp, guest, IoT, voice): VLAN 10 Admin, VLAN 20 Main Wi-Fi and trusted user devices, VLAN 30 Guest, VLAN 40 IoT/Cameras, VLAN 50 Voice
-- Gateway IP per VLAN (for example VLAN 10 -> 192.168.10.1/24): VLAN10->192.168.10.1/24, VLAN20->192.168.20.1/24, VLAN30->192.168.30.1/24, VLAN40->192.168.40.1/24, VLAN50->192.168.50.1/24
-- DHCP scope per VLAN (start/end or subnet): VLAN10 .10-.99, VLAN20 .10-.199, VLAN30 .10-.199, VLAN40 .10-.199, VLAN50 .10-.49
+- VLAN list and purpose (for example mgmt, corp, guest, IoT, voice): VLAN 10 Admin, VLAN 20 Trusted Wired, VLAN 25 Trusted Wi-Fi, VLAN 30 Guest, VLAN 40 Media/IoT/Cameras, VLAN 50 PoE/Voice, VLAN 60 Backup/Storage, VLAN 70 Printers/Services
+- Endpoint placement matrix:
+  - Mac Studio -> VLAN 20
+  - Rodecaster Pro -> VLAN 20
+  - Apple TV -> VLAN 40
+  - Google TV -> VLAN 40
+  - Epson printer -> VLAN 70 (Wi-Fi only)
+  - iPads/iPhones -> VLAN 25
+  - 3CX handset -> VLAN 50
+  - Security cameras -> VLAN 40
+  - Backup NAS/targets -> VLAN 60
+- Gateway IP per VLAN (for example VLAN 10 -> 192.168.10.1/24): VLAN10->192.168.10.1/24, VLAN20->192.168.20.1/24, VLAN25->192.168.25.1/24, VLAN30->192.168.30.1/24, VLAN40->192.168.40.1/24, VLAN50->192.168.50.1/24, VLAN60->192.168.60.1/24, VLAN70->192.168.70.1/24
+- DHCP scope per VLAN (start/end or subnet): VLAN10 .10-.99, VLAN20 .10-.199, VLAN25 .10-.199, VLAN30 .10-.199, VLAN40 .10-.199, VLAN50 .10-.49, VLAN60 .10-.49, VLAN70 .10-.49
 - IPv4 subnets per VLAN/site: as above
 - IPv6 needed? (yes/no + prefix delegation or static if known): no
-- Inter-VLAN policy (what can talk to what): VLAN10 can access all; VLAN20 internet plus approved local services; VLAN30 internet only; VLAN40 internet only plus required camera services; VLAN50 internet plus 3CX services only
+- Inter-VLAN policy (what can talk to what): VLAN10 can access all; VLAN20 internet plus approved local services; VLAN25 internet plus approved local services but blocked from VLAN60 backup; VLAN30 internet only; VLAN40 internet only plus required media/camera services; VLAN50 internet plus 3CX services only; VLAN60 backup-only and reachable only from VLAN10 and approved VLAN20 devices; VLAN70 printer/services reachable only from VLAN10 and approved VLAN20 or VLAN25 clients
 
 5) Routing
 - Routing type (static, OSPF, BGP): static
@@ -53,6 +63,7 @@ Is this a simulation only, or intended to produce deployable artifacts? (simulat
 
 7) Edge services
 - NAT needs (masquerade, static NAT, inbound port forwards): masquerade only, no inbound port forwards
+- 3CX hosting model (cloud-hosted, on-prem, unknown): cloud-hosted
 - VPN needs (WireGuard, IPsec, OpenVPN, site-to-site, remote users): WireGuard for admin remote access
 - QoS needs (voice/video priority, critical app shaping): prioritize 3CX voice and Zoom/interactive traffic
 - DHCP/DNS/NTP hosted on router or external systems: DHCP and DNS cache on router, NTP client to upstream sources
@@ -61,7 +72,8 @@ Is this a simulation only, or intended to produce deployable artifacts? (simulat
 8) AP and trunk mapping
 - Which router port is VLAN trunk to AP/switch (for example ether5): ether8
 - Trunk native VLAN (untagged VLAN on trunk, if any): none preferred; all-tagged preferred if AP supports it
-- SSID to VLAN mapping (for example HomeWiFi->20, GuestWiFi->30): MainWiFi->20, GuestWiFi->30, IoTWiFi->40, VoiceWiFi->50 only if AP supports per-SSID VLANs
+- AP VLAN capability classification: uncertain, design fallback required (ASUSWRT consumer AP mode; multiple SSIDs/guest segmentation supported, true 802.1Q trunk behavior not confirmed)
+- SSID to VLAN mapping (for example HomeWiFi->20, GuestWiFi->30): MainWiFi->25, GuestWiFi->30, IoTWiFi->40, VoiceWiFi->50 only if AP supports per-SSID VLANs
 
 9) Downstream device port mapping
 - Any non-managed downstream devices connected directly to the router? (yes/no): yes
@@ -70,7 +82,7 @@ Is this a simulation only, or intended to produce deployable artifacts? (simulat
   - Which router port will it use (for example ether6): ether2
   - Port mode required (access/untagged only, not trunk): access/untagged
   - VLAN for that port: VLAN 20
-  - Should the device be isolated from other internal VLANs? (yes/no): no, follows VLAN 20 policy
+  - Should the device be isolated from other internal VLANs? (yes/no): yes, trusted wired only (no direct path to VLAN60 backup unless explicitly allowed)
   - Is downstream NAT allowed on that device? (yes/no): no
 - Additional unmanaged device:
   - Device name/type: Tenda PoE switch
@@ -83,14 +95,15 @@ Is this a simulation only, or intended to produce deployable artifacts? (simulat
 10) Observability and operations
 - Log destination (local, syslog, SIEM): local plus remote syslog
 - Monitoring (SNMP, NetFlow/IPFIX, other): SNMP optional, no NetFlow required initially
-- Backup policy (schedule, encryption, backup target): encrypted backup from private repo process, remote target TBD
+- Backup policy (schedule, encryption, backup target): encrypted backup from private repo process; remote target can be NAS/host that syncs to iCloud Drive or Google Drive (RouterOS should not be assumed to upload directly to iCloud/Google Drive)
 - Alert channels (email, chat, NOC tooling): TBD
 - Change control requirements (approvals, phased rollout): staged rollout with manual validation after each stage
+- Deployment blocker mode for missing ops dependencies: no, caveats only
 
 11) Failure behavior and acceptance tests
 - Required behavior if AP/trunk fails: wired admin access on ether7 must remain available; wireless clients fail without affecting router management
 - Required behavior if WAN fails (single/dual WAN): internal VLAN services remain routed locally; internet unavailable; management from VLAN10 remains available
-- Acceptance tests to pass (internet, DNS, VLAN isolation, guest isolation, VPN): WAN DHCP bound, DNS resolution works, guest blocked from RFC1918, admin reachable via VLAN10 and WireGuard, voice handset registers, printer reachable from approved VLAN only
+- Acceptance tests to pass (internet, DNS, VLAN isolation, guest isolation, VPN): WAN DHCP bound, DNS resolution works, guest blocked from RFC1918, VLAN25 Wi-Fi clients cannot reach VLAN60 backup, admin reachable via VLAN10 and WireGuard, voice handset registers, printer reachable only from approved VLANs
 
 12) Output preferences
 - Output style (single script, modular blocks, heavily commented): modular blocks with concise comments
@@ -103,8 +116,9 @@ Is this a simulation only, or intended to produce deployable artifacts? (simulat
 
 ## Known Remaining Gaps Even In This Golden Form
 
-- ASUS AP VLAN capability still needs real-world confirmation
-- 3CX hosting location should be confirmed explicitly
+- ASUS AP VLAN trunk capability still needs real-world confirmation
+- 3CX is confirmed cloud-hosted
 - Remote syslog target IP/hostname is still TBD
-- Backup destination and alerting channels are still TBD
+- Backup destination path and alerting channels are still TBD
+- Approved allowlist of specific VLAN20 devices that may access VLAN60 backup is still TBD
 - This form is strong enough for version-targeted design on RouterOS 7.22, but final deployable artifacts still require command review against the exact 7.22 behavior used in production

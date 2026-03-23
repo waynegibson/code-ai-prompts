@@ -27,32 +27,35 @@
 - The result is framed as a deployable candidate pending validation, not an unquestioned final build.
 - Remaining blockers are listed explicitly.
 
-## Remaining Prompt Gaps Exposed By v2
+## Remaining Prompt Gaps Exposed By v2 (after operator clarifications)
 
-1. Endpoint placement still benefits from a dedicated matrix
+1. Endpoint placement matrix should be mandatory, but operator choice is now known
 
-- The prompt still allows ambiguity around whether Mac Studio and Rodecaster belong in VLAN 10 or VLAN 20.
-- A required endpoint-to-VLAN mapping table would reduce this.
+- Decision captured: Mac Studio and Rodecaster Pro are both on VLAN 20.
+- Prompt should still require a full endpoint-to-VLAN matrix every run.
 
-2. AP capability confirmation is still too soft
+2. AP capability confirmation still needs stronger enforcement
 
-- The prompt asks for SSID-to-VLAN mapping, but should force a stronger decision when AP VLAN capability is unknown:
+- Decision captured: ASUS AP capability is uncertain, fallback required.
+- Prompt should force one of three states every run:
   - trunk-capable and confirmed
   - uncertain, design fallback required
   - not capable, access-only fallback required
 
-3. Voice design still needs a stronger branch
+3. Voice design branch is partially resolved
 
-- If 3CX is cloud-hosted vs on-prem, the prompt should branch more explicitly.
-- Voice VLAN policy and QoS are meaningfully different once host location is known.
+- Decision captured: 3CX is cloud-hosted.
+- Prompt should still enforce explicit cloud vs on-prem branch logic in all runs.
 
-4. Monitoring/backups remain structurally under-specified
+4. Monitoring/backups are still partially under-specified
 
-- The prompt is honest about missing backup targets and alerts, but could require a deployment blocker label if remote ops are mandatory.
+- Decision captured: unresolved ops dependencies are caveats only, not hard blockers.
+- Cloud backup expectation should be clarified as indirect path (host/NAS sync to iCloud/Google Drive), not direct RouterOS upload.
 
 ## Recommended Next Prompt Refactors
 
-1. Add required endpoint placement table
+1. Add required endpoint placement table (all key endpoints must be mapped)
 2. Add AP capability decision states instead of a single free-text answer
 3. Add explicit 3CX hosting branch logic
-4. Add a "deployment blocker" tag for unresolved operational dependencies like syslog and backup destination
+4. Add a "deployment blocker" tag plus caveat-mode option for unresolved ops dependencies
+5. Add explicit backup target model options including indirect cloud backup path
