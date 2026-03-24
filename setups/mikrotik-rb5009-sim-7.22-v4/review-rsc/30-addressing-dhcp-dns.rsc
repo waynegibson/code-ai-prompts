@@ -9,6 +9,7 @@ add address=192.168.40.1/24 interface=vlan40-iot comment="IoT VLAN gateway"
 add address=192.168.50.1/24 interface=vlan50-voice comment="Voice VLAN gateway"
 add address=192.168.60.1/24 interface=vlan60-backup comment="Backup VLAN gateway"
 add address=192.168.70.1/24 interface=vlan70-services comment="Services VLAN gateway"
+add address=10.10.10.1/24 interface=wg0 comment="WireGuard admin subnet"
 
 # DHCP pools
 /ip pool
